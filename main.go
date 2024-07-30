@@ -24,6 +24,7 @@ func main(){
     }
 
     rp := repo{
+
         basePath: mydir,
     }
 
