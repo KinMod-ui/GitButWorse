@@ -1,10 +1,9 @@
 package main
 
-
 type repo struct {
-    basePath string
+	basePath string
 }
 
-func (r repo) get_root() string{
-   return r.basePath 
+func (r repo) get_root() string {
+	return r.basePath
 }
