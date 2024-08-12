@@ -6,5 +6,5 @@ type object struct {
 }
 
 type objectInter interface {
-	writeObject() (string, error)
+	writeObject(map[string]fileData, bool) (string, error)
 }

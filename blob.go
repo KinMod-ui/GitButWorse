@@ -12,11 +12,10 @@ type blob struct {
 	object
 }
 
-func (blob *blob) writeObject() (string, error) {
+func (blob *blob) writeObject(path string, save bool) (string, error) {
 
 	data := blob.data
 	if len(data) == 0 {
-		Mylog.Println("Writing 0 data")
 		return "", errors.New("No data to write")
 	}
 	format := "blob"
@@ -35,7 +34,9 @@ func (blob *blob) writeObject() (string, error) {
 	w.Write(finalByteArray)
 	w.Close()
 
-	storeDataToFile(buff, get_repo(), ".gitbutworse", "objects", sha[:2], sha[2:])
-
+	if save {
+		storeDataToFile(buff, true, path, sha[:2], sha[2:])
+	}
 	return sha, nil
+
 }

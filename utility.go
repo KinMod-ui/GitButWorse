@@ -6,7 +6,6 @@ import (
 	"compress/zlib"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -14,10 +13,12 @@ import (
 	"strings"
 )
 
+var Mylog = log.New(os.Stderr, "GBW: ", log.LstdFlags|log.Lshortfile)
+
 func readObject(sha string) (object, error) {
 	var gitObject object
 
-	fmt.Println(sha)
+	Mylog.Println(sha)
 
 	filepth := filepath.Join(get_repo(), ".gitbutworse", "objects", sha[:2], sha[2:])
 
@@ -92,7 +93,7 @@ func decodeFile(file bytes.Buffer) ([]byte, error) {
 	}
 	r.Close()
 	io.Copy(&out, r)
-	//fmt.Println("out" , out.Bytes())
+	//Mylog.Println("out" , out.Bytes())
 	return out.Bytes(), nil
 }
 
@@ -106,47 +107,48 @@ func ReturnHash(byteArray []byte) string {
 }
 
 func printDiffBytes(file1, file2 []byte) {
-	var buf1, buf2 bytes.Buffer
-	buf1 = *bytes.NewBuffer(file1)
-	buf2 = *bytes.NewBuffer(file2)
+	//var buf1, buf2 bytes.Buffer
+	//buf1 = *bytes.NewBuffer(file1)
+	//buf2 = *bytes.NewBuffer(file2)
 
-	actualFileByte1, err := decodeFile(buf1)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	//actualFileByte1, err := decodeFile(buf1)
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
 
-	actualFileByte2, err := decodeFile(buf2)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	//actualFileByte2, err := decodeFile(buf2)
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
 
-	actualFileString1 := string(actualFileByte1)
-	actualFileString2 := string(actualFileByte2)
+	actualFileString1 := string(file1)
+	actualFileString2 := string(file2)
 
 	scanner1 := bufio.NewScanner(strings.NewReader(actualFileString1))
 	scanner2 := bufio.NewScanner(strings.NewReader(actualFileString2))
-	fmt.Println("+++ : file1, --- : file2")
+	Mylog.Println("+++ : file1, --- : file2")
 
 	cnt := 0
 
 	for scanner1.Scan() {
 		cnt++
 		if !scanner2.Scan() {
-			fmt.Println("Line:", cnt, " +++ ", scanner1.Text())
+			Mylog.Println("Line:", cnt, " +++ ", scanner1.Text())
 		} else {
 			txt1 := scanner1.Text()
 			txt2 := scanner2.Text()
 			if txt1 != txt2 {
-				fmt.Println("Line:", cnt, " +++ ", scanner1.Text())
-				fmt.Println("Line:", cnt, " --- ", scanner2.Text())
+				Mylog.Println("Line:", cnt, " +++ ", scanner1.Text())
+				Mylog.Println("Line:", cnt, " --- ", scanner2.Text())
 			}
 		}
 	}
 
 	for scanner2.Scan() {
-		fmt.Println("Line:", cnt, " --- ", scanner2.Text())
+		cnt++
+		Mylog.Println("Line:", cnt, " --- ", scanner2.Text())
 	}
 }
 
@@ -161,40 +163,41 @@ func exists(path string) (bool, error) {
 	return false, err
 }
 
-func storeDataToFile(data bytes.Buffer, path ...string) {
-	var ret bool
+func storeDataToFile(data bytes.Buffer, pathCheck bool, path ...string) {
 	if len(data.Bytes()) == 0 {
 		Mylog.Println("No data to write")
 		return
 	}
-	ret, err := exists(filepath.Join(strings.Join(path, "/")))
-	if err != nil {
-		Mylog.Println(err)
-		return
+	if pathCheck {
+		ret, err := exists(filepath.Join(strings.Join(path, "/")))
+		if err != nil {
+			Mylog.Println(err)
+			return
+		}
+
+		if ret {
+			Mylog.Println("No change in file already in repo")
+			return
+		} else {
+			Mylog.Println("change in file already in repo")
+		}
 	}
 
-	if ret {
-		Mylog.Println("No change in file already in repo")
-		return
-	} else {
-		Mylog.Println("change in file already in repo")
-	}
-
-	err = os.MkdirAll(filepath.Dir(strings.Join(path, "/")), os.ModePerm)
+	err := os.MkdirAll(filepath.Dir(strings.Join(path, "/")), os.ModePerm)
 	if err != nil {
-		fmt.Println("recieved error", err)
+		Mylog.Println("recieved error", err)
 		return
 	}
 
 	fileout, err := os.Create(strings.Join(path, "/"))
 	if err != nil {
-		fmt.Println("recieved error", err)
+		Mylog.Println("recieved error", err)
 		return
 	}
 
 	defer func() {
 		if err := fileout.Close(); err != nil {
-			fmt.Println("recieved error", err)
+			Mylog.Println("recieved error", err)
 			return
 		}
 	}()
@@ -218,12 +221,10 @@ func storeDataToFile(data bytes.Buffer, path ...string) {
 
 }
 
-var Mylog = log.New(os.Stderr, "GBW: ", log.LstdFlags|log.Lshortfile)
-
 func get_repo() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error found here", err)
+		Mylog.Println("Error found here", err)
 		return ""
 	}
 	return dir

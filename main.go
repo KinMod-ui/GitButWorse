@@ -1,32 +1,67 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
 func main() {
 
-	var tp objectInter
-	dir, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	//var tp objectInter
 
-	tp = &tree{
-		Tree: []treeNode{
-			handleTreeNode("tree", dir, ""),
-		},
-	}
+	//dir, err := os.Getwd()
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
+	//tp = &tree{
+	//Tree: []treeNode{
+	//handleTreeNode("tree", dir, ""),
+	//},
+	//}
 
-	hash, err := tp.writeObject()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	//var indexTable = make(map[string]fileData)
+	//hash, err := tp.writeObject(indexTable, true)
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
 
-	fmt.Println(hash)
-	t2, err := readObject(hash)
-	fmt.Println(string(t2.data), t2.format)
+	//storeDataToFile(*bytes.NewBuffer([]byte(hash)), false, get_repo(), ".gitbutworse", "ref", "HEAD")
+
+	//encryptedIndexTable, err := handleIndexTable(indexTable)
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
+
+	//storeDataToFile(encryptedIndexTable, true, get_repo(), ".gitbutworse", "ref", hash[:2], hash[2:])
+
+	args := os.Args[1:]
+
+	switch args[0] {
+	case "diff":
+		{
+			currentHead, err := getLatestCommit()
+			if err != nil {
+				if os.IsNotExist(err) {
+					Mylog.Println(err)
+				} else {
+					Mylog.Println("Shouldnt have happened: ", err)
+				}
+			} else {
+				dir, err := os.Getwd()
+				if err != nil {
+					Mylog.Println(err)
+					return
+				}
+				headIndexTable, err := getCommitIndexTable(currentHead)
+				if err != nil {
+					Mylog.Println(err)
+					return
+				}
+
+				diffTreeWithCurrentState(currentHead, headIndexTable, dir)
+			}
+		}
+	}
 }

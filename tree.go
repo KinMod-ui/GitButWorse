@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -68,13 +69,13 @@ func deserialise(bts bytes.Buffer) tree {
 	return b
 }
 
-func (currtree *tree) writeObject() (string, error) {
+func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (string, error) {
 	path := currtree.Tree[0].Path
 
 	items, err := os.ReadDir(path)
 
 	if err != nil {
-		fmt.Println(err, "Here")
+		Mylog.Println(err)
 		return "", err
 	}
 
@@ -93,10 +94,10 @@ func (currtree *tree) writeObject() (string, error) {
 			}
 			childTree := tree{
 				Tree: []treeNode{
-					handleTreeNode("tree", path+"/"+item.Name(), "abc"),
+					handleTreeNode("tree", path+"/"+item.Name(), ""),
 				},
 			}
-			hashPathChildTree, err := childTree.writeObject()
+			hashPathChildTree, err := childTree.writeObject(indexTable, save)
 			if err != nil {
 				Mylog.Println(err)
 				return "", err
@@ -108,7 +109,7 @@ func (currtree *tree) writeObject() (string, error) {
 			childTree.Tree[0].Sha = hashPathChildTree
 			currtree.Tree = append(currtree.Tree, childTree.Tree...)
 		} else {
-			fileData, err := os.ReadFile(path + "/" + item.Name())
+			fileDataByte, err := os.ReadFile(path + "/" + item.Name())
 			if err != nil {
 				fmt.Println(err, "here")
 				continue
@@ -117,13 +118,26 @@ func (currtree *tree) writeObject() (string, error) {
 			leafBlob := blob{
 				object{
 					format: "blob",
-					data:   fileData,
+					data:   fileDataByte,
 				},
 			}
-			sha, err := leafBlob.writeObject()
+
+			sha, err := leafBlob.writeObject(filepath.Join(get_repo(), ".gitbutworse", "objects"), save)
 			if err != nil {
-				fmt.Println(err, "there")
+				Mylog.Println(err)
 				continue
+			}
+			info, err := os.Stat(path + "/" + item.Name())
+			if err != nil {
+				Mylog.Println(err)
+				continue
+			}
+
+			if !save {
+				indexTable[path+"/"+item.Name()] = fileData{Path: sha, TimeModified: info.ModTime().String()}
+			} else {
+
+				indexTable[path+"/"+item.Name()] = fileData{Path: sha, TimeModified: info.ModTime().String()}
 			}
 			currtree.Tree = append(currtree.Tree, handleTreeNode("blob", path+"/"+item.Name(), sha))
 		}
@@ -142,15 +156,13 @@ func (currtree *tree) writeObject() (string, error) {
 
 	finalByteArray := append(formatByte, encodedTree...)
 	encryptedData := EncryptBytes(finalByteArray)
-	FinalArray = encodedTree
 
 	hashPath := ReturnHash(encryptedData.Bytes())
-	Mylog.Println("Writing ", path, " at", hashPath)
 
-	storeDataToFile(encryptedData, get_repo(), ".gitbutworse", "objects", hashPath[:2], hashPath[2:])
+	if save {
+		storeDataToFile(encryptedData, true, get_repo(), ".gitbutworse", "objects", hashPath[:2], hashPath[2:])
+	}
 	currtree.Tree[0].Sha = hashPath
 
 	return hashPath, nil
 }
-
-var FinalArray []byte
