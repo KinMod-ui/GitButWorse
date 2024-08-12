@@ -15,6 +15,12 @@ import (
 
 var Mylog = log.New(os.Stderr, "GBW: ", log.LstdFlags|log.Lshortfile)
 
+const (
+	fileCreateOnly = iota
+	fileWriteAppend
+	fileWriteOverWrite
+)
+
 func readObject(sha string) (object, error) {
 	var gitObject object
 
@@ -163,21 +169,21 @@ func exists(path string) (bool, error) {
 	return false, err
 }
 
-func storeDataToFile(data bytes.Buffer, pathCheck bool, path ...string) {
+func storeDataToFile(data bytes.Buffer, appendMode int, pathCheck bool, path ...string) bool {
 	if len(data.Bytes()) == 0 {
 		Mylog.Println("No data to write")
-		return
+		return false
 	}
-	if pathCheck {
+	if pathCheck && appendMode == fileCreateOnly {
 		ret, err := exists(filepath.Join(strings.Join(path, "/")))
 		if err != nil {
 			Mylog.Println(err)
-			return
+			return false
 		}
 
 		if ret {
 			Mylog.Println("No change in file already in repo")
-			return
+			return false
 		} else {
 			Mylog.Println("change in file already in repo")
 		}
@@ -186,13 +192,19 @@ func storeDataToFile(data bytes.Buffer, pathCheck bool, path ...string) {
 	err := os.MkdirAll(filepath.Dir(strings.Join(path, "/")), os.ModePerm)
 	if err != nil {
 		Mylog.Println("recieved error", err)
-		return
+		return false
 	}
 
-	fileout, err := os.Create(strings.Join(path, "/"))
+	var fileout *os.File
+	if appendMode == fileWriteAppend {
+		fileout, err = os.OpenFile(strings.Join(path, "/"), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	} else {
+		fileout, err = os.OpenFile(strings.Join(path, "/"), os.O_CREATE|os.O_WRONLY, 0600)
+	}
+
 	if err != nil {
 		Mylog.Println("recieved error", err)
-		return
+		return false
 	}
 
 	defer func() {
@@ -219,6 +231,7 @@ func storeDataToFile(data bytes.Buffer, pathCheck bool, path ...string) {
 		}
 	}
 
+	return true
 }
 
 func get_repo() string {

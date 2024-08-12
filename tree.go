@@ -103,7 +103,7 @@ func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (st
 				return "", err
 			}
 			if len(childTree.Tree) == 1 {
-				Mylog.Println("Passing here for : ", item.Name())
+				//Mylog.Println("Passing here for : ", item.Name())
 				continue
 			}
 			childTree.Tree[0].Sha = hashPathChildTree
@@ -132,13 +132,7 @@ func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (st
 				Mylog.Println(err)
 				continue
 			}
-
-			if !save {
-				indexTable[path+"/"+item.Name()] = fileData{Path: sha, TimeModified: info.ModTime().String()}
-			} else {
-
-				indexTable[path+"/"+item.Name()] = fileData{Path: sha, TimeModified: info.ModTime().String()}
-			}
+			indexTable[path+"/"+item.Name()] = fileData{Path: sha, TimeModified: info.ModTime().String()}
 			currtree.Tree = append(currtree.Tree, handleTreeNode("blob", path+"/"+item.Name(), sha))
 		}
 	}
@@ -158,9 +152,10 @@ func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (st
 	encryptedData := EncryptBytes(finalByteArray)
 
 	hashPath := ReturnHash(encryptedData.Bytes())
+	Mylog.Println("Writing ", string(finalByteArray), " at", hashPath, " at", path)
 
 	if save {
-		storeDataToFile(encryptedData, true, get_repo(), ".gitbutworse", "objects", hashPath[:2], hashPath[2:])
+		storeDataToFile(encryptedData, fileCreateOnly, true, get_repo(), ".gitbutworse", "objects", hashPath[:2], hashPath[2:])
 	}
 	currtree.Tree[0].Sha = hashPath
 

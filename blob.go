@@ -35,7 +35,7 @@ func (blob *blob) writeObject(path string, save bool) (string, error) {
 	w.Close()
 
 	if save {
-		storeDataToFile(buff, true, path, sha[:2], sha[2:])
+		storeDataToFile(buff, fileCreateOnly, true, path, sha[:2], sha[2:])
 	}
 	return sha, nil
 
