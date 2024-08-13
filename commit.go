@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"os"
+	"path/filepath"
 )
 
 type commit struct {
@@ -46,6 +48,31 @@ func createCommitWithTreeAndIdxTable(sha string, tree tree, indexTable map[strin
 	}
 
 	return nil
+}
+
+func getCommitFromHash(sha string) error {
+
+	ret, err := os.ReadFile(filepath.Join(get_repo(), ".gitbutworse", "ref", sha[:2], sha[2:]))
+
+	if err != nil {
+		return err
+	}
+
+	decryptedData, err := decodeFile(*bytes.NewBuffer(ret))
+
+	if err != nil {
+		return err
+	}
+
+	deserialisedData, err := deserialiseCommit(decryptedData)
+
+	if err != nil {
+		return err
+	}
+
+	Mylog.Println(deserialisedData.Id, deserialisedData.Message, deserialisedData.IndexTable)
+	return nil
+
 }
 
 func deserialiseCommit(data []byte) (commit, error) {

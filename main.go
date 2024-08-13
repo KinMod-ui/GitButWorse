@@ -28,6 +28,7 @@ func main() {
 
 	createCommitWithTreeAndIdxTable(hash, *tp, indexTable, []string{}, "Hi I am kin")
 
+	getCommitFromHash(hash)
 	//storeDataToFile(*bytes.NewBuffer([]byte(hash)), false, get_repo(), ".gitbutworse", "ref", "HEAD")
 
 	//encryptedIndexTable, err := handleIndexTable(indexTable)
@@ -42,28 +43,28 @@ func main() {
 
 	//switch args[0] {
 	//case "diff":
-		//{
-			//currentHead, err := getLatestCommit()
-			//if err != nil {
-				//if os.IsNotExist(err) {
-					//Mylog.Println(err)
-				//} else {
-					//Mylog.Println("Shouldnt have happened: ", err)
-				//}
-			//} else {
-				//dir, err := os.Getwd()
-				//if err != nil {
-					//Mylog.Println(err)
-					//return
-				//}
-				//headIndexTable, err := getCommitIndexTable(currentHead)
-				//if err != nil {
-					//Mylog.Println(err)
-					//return
-				//}
+	//{
+	//currentHead, err := getLatestCommit()
+	//if err != nil {
+	//if os.IsNotExist(err) {
+	//Mylog.Println(err)
+	//} else {
+	//Mylog.Println("Shouldnt have happened: ", err)
+	//}
+	//} else {
+	//dir, err := os.Getwd()
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
+	//headIndexTable, err := getCommitIndexTable(currentHead)
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
 
-				//diffTreeWithCurrentState(currentHead, headIndexTable, dir)
-			//}
-		//}
+	//diffTreeWithCurrentState(currentHead, headIndexTable, dir)
+	//}
+	//}
 	//}
 }

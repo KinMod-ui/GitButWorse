@@ -4,7 +4,7 @@
 - [x] Tree Handling
 - [x] Blob Handling
 - [x] Git diff command
-- [ ] Commit object Handling
+- [x] Commit object Handling
 - [ ] Git checkout (which will utilise tree handling)
 - [ ] Repo creation
 - [ ] Git branching
