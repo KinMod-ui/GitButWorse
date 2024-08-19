@@ -61,7 +61,7 @@ func diffTreeWithCurrentState(tree1 string, indexTable1 map[string]fileData, pat
 		return err
 	}
 
-	if tree1 == localTree.Tree[0].Sha {
+	if tree1 == localTree.Sha {
 		Mylog.Println("Both the trees are equal. No Change")
 	} else {
 
@@ -88,12 +88,12 @@ func diffTwoIndexTable(indexTable1, indexTable2 map[string]fileData) {
 
 				//file1, err := readObject(fileData.Path)
 				//if err != nil {
-					//Mylog.Println("Error reading file in commit : ", fileName, " error : ", err)
+				//Mylog.Println("Error reading file in commit : ", fileName, " error : ", err)
 				//}
 
 				//file2, err := os.ReadFile(fileName)
 				//if err != nil {
-					//Mylog.Println("Error reading file in local repo : ", fileName, " error : ", err)
+				//Mylog.Println("Error reading file in local repo : ", fileName, " error : ", err)
 				//}
 
 				//printDiffBytes(file1.data, file2)
@@ -111,22 +111,18 @@ func diffTwoIndexTable(indexTable1, indexTable2 map[string]fileData) {
 	}
 }
 
-func getLocalTreeAndIndexTable(path string) (tree, map[string]fileData, error) {
+func getLocalTreeAndIndexTable(path string) (*tree, map[string]fileData, error) {
 
-	currentLocalTree := tree{
-		Tree: []treeNode{
-			handleTreeNode("tree", path, ""),
-		},
-	}
+	currentLocalTree := handleTreeNode("tree", path, "")
 
 	indexTree := make(map[string]fileData)
 
 	hashPath, err := currentLocalTree.writeObject(indexTree, false)
 	if err != nil {
-		return tree{}, indexTree, err
+		return &tree{}, indexTree, err
 	}
 
-	currentLocalTree.Tree[0].Sha = hashPath
+	currentLocalTree.Sha = hashPath
 
 	return currentLocalTree, indexTree, nil
 }

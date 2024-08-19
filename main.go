@@ -1,34 +1,39 @@
 package main
 
-import (
-	"os"
-)
+//import (
+//"os"
+//)
 
 func main() {
 
-	var tp *tree
+	//var tp *tree
 
-	dir, err := os.Getwd()
+	//dir, err := os.Getwd()
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
+	//tp = &tree{
+	//Tree: []treeNode{
+	//handleTreeNode("tree", dir, ""),
+	//},
+	//}
+
+	//var indexTable = make(map[string]fileData)
+	//hash, err := tp.writeObject(indexTable, true)
+	//if err != nil {
+	//Mylog.Println(err)
+	//return
+	//}
+
+	obj, err := (readObject("1QPphFM7slWzsc5d7rBNuCPx9fvwrdJtC7cNF_bXMTY="))
 	if err != nil {
 		Mylog.Println(err)
-		return
 	}
-	tp = &tree{
-		Tree: []treeNode{
-			handleTreeNode("tree", dir, ""),
-		},
-	}
+	Mylog.Println(string(obj.data))
+	//createCommitWithTreeAndIdxTable(hash, *tp, indexTable, []string{}, "Hi I am kin")
 
-	var indexTable = make(map[string]fileData)
-	hash, err := tp.writeObject(indexTable, true)
-	if err != nil {
-		Mylog.Println(err)
-		return
-	}
-
-	createCommitWithTreeAndIdxTable(hash, *tp, indexTable, []string{}, "Hi I am kin")
-
-	getCommitFromHash(hash)
+	//getCommitFromHash(hash)
 	//storeDataToFile(*bytes.NewBuffer([]byte(hash)), false, get_repo(), ".gitbutworse", "ref", "HEAD")
 
 	//encryptedIndexTable, err := handleIndexTable(indexTable)

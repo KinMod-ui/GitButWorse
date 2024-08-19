@@ -68,10 +68,10 @@ func (gObject *object) processData(data []byte) {
 	case "tree":
 		{
 			Tree := deserialise(*bytes.NewBuffer(data))
-			for i, subTree := range Tree.Tree {
-				if i == 0 {
-					continue
-				}
+			for _, subTree := range Tree.ChildTree {
+				//if i == 0 {
+				//continue
+				//}
 				object, err := readObject(subTree.Sha)
 				if err != nil {
 					Mylog.Println(err)

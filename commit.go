@@ -50,28 +50,27 @@ func createCommitWithTreeAndIdxTable(sha string, tree tree, indexTable map[strin
 	return nil
 }
 
-func getCommitFromHash(sha string) error {
+func getCommitFromHash(sha string) (commit, error) {
 
 	ret, err := os.ReadFile(filepath.Join(get_repo(), ".gitbutworse", "ref", sha[:2], sha[2:]))
 
 	if err != nil {
-		return err
+		return commit{}, err
 	}
 
 	decryptedData, err := decodeFile(*bytes.NewBuffer(ret))
 
 	if err != nil {
-		return err
+		return commit{}, err
 	}
 
 	deserialisedData, err := deserialiseCommit(decryptedData)
 
 	if err != nil {
-		return err
+		return commit{}, err
 	}
 
-	Mylog.Println(deserialisedData.Id, deserialisedData.Message, deserialisedData.IndexTable)
-	return nil
+	return deserialisedData, nil
 
 }
 

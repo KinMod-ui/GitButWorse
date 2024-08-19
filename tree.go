@@ -10,14 +10,11 @@ import (
 	"strings"
 )
 
-type treeNode struct {
-	Mode string
-	Path string
-	Sha  string
-}
-
 type tree struct {
-	Tree []treeNode
+	Mode      string
+	Path      string
+	Sha       string
+	ChildTree []*tree
 }
 
 func isDirectory(path string) (bool, error) {
@@ -29,15 +26,16 @@ func isDirectory(path string) (bool, error) {
 	return fileInfo.IsDir(), err
 }
 
-func handleTreeNode(mode, path, sha string) treeNode {
-	return treeNode{
-		Mode: mode,
-		Path: path,
-		Sha:  sha,
+func handleTreeNode(mode, path, sha string) *tree {
+	return &tree{
+		Mode:      mode,
+		Path:      path,
+		Sha:       sha,
+		ChildTree: []*tree{},
 	}
 }
 
-func (currTree tree) serialise() ([]byte, error) {
+func (currTree *tree) serialise() ([]byte, error) {
 
 	var b bytes.Buffer
 
@@ -70,7 +68,7 @@ func deserialise(bts bytes.Buffer) tree {
 }
 
 func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (string, error) {
-	path := currtree.Tree[0].Path
+	path := currtree.Path
 
 	items, err := os.ReadDir(path)
 
@@ -88,26 +86,31 @@ func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (st
 	})
 
 	for _, item := range items {
+		Mylog.Println(path + "/" + item.Name())
 		if item.IsDir() {
 			if strings.HasPrefix(item.Name(), ".git") {
 				continue
 			}
-			childTree := tree{
-				Tree: []treeNode{
-					handleTreeNode("tree", path+"/"+item.Name(), ""),
-				},
-			}
+			childTree := handleTreeNode("tree", path+"/"+item.Name(), "")
 			hashPathChildTree, err := childTree.writeObject(indexTable, save)
 			if err != nil {
 				Mylog.Println(err)
 				return "", err
 			}
-			if len(childTree.Tree) == 1 {
-				//Mylog.Println("Passing here for : ", item.Name())
+			if len(childTree.ChildTree) == 0 {
+				Mylog.Println("Passing here for : ", item.Name())
 				continue
 			}
-			childTree.Tree[0].Sha = hashPathChildTree
-			currtree.Tree = append(currtree.Tree, childTree.Tree...)
+
+			childTree.Sha = hashPathChildTree
+			currtree.ChildTree = append(currtree.ChildTree, childTree)
+
+			info, err := os.Stat(path + "/" + item.Name())
+			if err != nil {
+				Mylog.Println(err)
+				continue
+			}
+			indexTable[path+"/"+item.Name()] = fileData{Path: hashPathChildTree, TimeModified: info.ModTime().String()}
 		} else {
 			fileDataByte, err := os.ReadFile(path + "/" + item.Name())
 			if err != nil {
@@ -133,15 +136,23 @@ func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (st
 				continue
 			}
 			indexTable[path+"/"+item.Name()] = fileData{Path: sha, TimeModified: info.ModTime().String()}
-			currtree.Tree = append(currtree.Tree, handleTreeNode("blob", path+"/"+item.Name(), sha))
+			currtree.ChildTree = append(currtree.ChildTree, handleTreeNode("blob", path+"/"+item.Name(), sha))
 		}
 	}
 
-	encodedTree, err := currtree.serialise()
+	Mylog.Println(currtree)
 	if err != nil {
-		fmt.Println(err)
+		Mylog.Println(err)
 		return "", err
 	}
+	encodedTree, err := currtree.serialise()
+
+	Mylog.Println(path)
+	for _, tr := range currtree.ChildTree {
+		Mylog.Println(*tr)
+	}
+
+	Mylog.Println(string(encodedTree))
 
 	//encryptedData := EncryptBytes(encodedTree)
 	format := "tree"
@@ -152,12 +163,12 @@ func (currtree *tree) writeObject(indexTable map[string]fileData, save bool) (st
 	encryptedData := EncryptBytes(finalByteArray)
 
 	hashPath := ReturnHash(encryptedData.Bytes())
-	Mylog.Println("Writing ", string(finalByteArray), " at", hashPath, " at", path)
+	//Mylog.Println("Writing ", string(finalByteArray), " at", hashPath, " at", path)
 
 	if save {
 		storeDataToFile(encryptedData, fileCreateOnly, true, get_repo(), ".gitbutworse", "objects", hashPath[:2], hashPath[2:])
 	}
-	currtree.Tree[0].Sha = hashPath
+	currtree.Sha = hashPath
 
 	return hashPath, nil
 }
