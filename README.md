@@ -49,6 +49,8 @@ The index table and commit are stored using hash of the tree(Dont call me lazy. 
 
 Some Common Paths
 > ref/commitId -> stores a commit using tree hash
+
 > ref/Head -> stores Head SHA
+
 > ref/refTable -> stores all Hash inside a table for checkout commands
 
